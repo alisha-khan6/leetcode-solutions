@@ -14,10 +14,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Sync LeetCode submissions
-        uses: joshcai/leetcode-sync@main
+        uses: starrynightarse/leetcode-sync@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           leetcode-session: ${{ secrets.LEETCODE_SESSION }}
-          destination-folder: ''
-          commit-message: 'Sync LeetCode solution [skip ci]'
           user-slug: 'Alisha_Khan6'
