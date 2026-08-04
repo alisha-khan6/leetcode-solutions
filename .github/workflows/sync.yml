@@ -13,9 +13,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Sync LeetCode submissions
-        uses: starrynightarse/leetcode-sync@master
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          leetcode-session: ${{ secrets.LEETCODE_SESSION }}
-          user-slug: 'Alisha_Khan6'
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run LeetCode Sync Script
+        env:
+          LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LEETCODE_USERNAME: 'Alisha_Khan6'
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          python -c '
+          import os, requests, json, base64
+
+          session = os.environ["LEETCODE_SESSION"]
+          username = os.environ["LEETCODE_USERNAME"]
+          token = os.environ["GITHUB_TOKEN"]
+          repo = os.environ["REPO_NAME"]
+
+          headers = {
+              "Cookie": f"LEETCODE_SESSION={session}",
+              "Referer": f"https://leetcode.com/{username}/"
+          }
+
+          # GraphQL query to fetch recent accepted submissions
+          query = """
+          query recentAcSubmissions($username: String!, $limit: Int!) {
+            recentAcSubmissionList(username: $username, limit: $limit) {
+              id
+              title
+              titleSlug
+              timestamp
+            }
+          }
+          """
+          
+          response = requests.post(
+              "https://leetcode.com/graphql",
+              json={"query": query, "variables": {"username": username, "limit": 20}},
+              headers=headers
+          )
+
+          print("Status Code:", response.status_code)
+          data = response.json()
+          print("Response Data:", data)
+          '
