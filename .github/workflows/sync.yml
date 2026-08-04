@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run LeetCode Sync Script
+      - name: Run Full LeetCode Sync
         env:
           LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,19 +29,20 @@ jobs:
           REPO_NAME: ${{ github.repository }}
         run: |
           python -c '
-          import os, requests, json, base64
+          import os, requests, json, time
+          from github import Github, InputGitTreeElement
 
           session = os.environ["LEETCODE_SESSION"]
           username = os.environ["LEETCODE_USERNAME"]
+          repo_name = os.environ["REPO_NAME"]
           token = os.environ["GITHUB_TOKEN"]
-          repo = os.environ["REPO_NAME"]
 
           headers = {
               "Cookie": f"LEETCODE_SESSION={session}",
               "Referer": f"https://leetcode.com/{username}/"
           }
 
-          # GraphQL query to fetch recent accepted submissions
+          # Fetch recent accepted submissions
           query = """
           query recentAcSubmissions($username: String!, $limit: Int!) {
             recentAcSubmissionList(username: $username, limit: $limit) {
@@ -55,9 +56,63 @@ jobs:
           
           response = requests.post(
               "https://leetcode.com/graphql",
-              json={"query": query, "variables": {"username": username, "limit": 20}},
+              json={"query": query, "variables": {"username": username, "limit": 50}},
               headers=headers
           )
+          
+          data = response.json()
+          submissions = data.get("data", {}).get("recentAcSubmissionList", [])
+          print(f"Found {len(submissions)} recent submissions to sync.")
+          
+          # We will use git commands directly inside the runner to push files
+          os.system("git config --global user.name \"GitHub Action\"")
+          os.system("git config --global user.email \"action@github.com\"")
+
+          for sub in submissions:
+              sub_id = sub["id"]
+              title = sub["title"]
+              slug = sub["titleSlug"]
+              
+              # Fetch detailed submission code using GraphQL submission details
+              detail_query = """
+              query submissionDetails($submissionId: Int!) {
+                submissionDetails(submissionId: $submissionId) {
+                  code
+                  lang {
+                    name
+                    verboseName
+                  }
+                }
+              }
+              """
+              detail_res = requests.post(
+                  "https://leetcode.com/graphql",
+                  json={"query": detail_query, "variables": {"submissionId": int(sub_id)}},
+                  headers=headers
+              )
+              detail_data = detail_res.json()
+              details = detail_data.get("data", {}).get("submissionDetails")
+              
+              if not details:
+                  continue
+                  
+              code = details["code"]
+              lang_name = details["lang"]["name"]
+              
+              # Map language to file extension
+              ext_map = {"python3": "py", "python": "py", "cpp": "cpp", "java": "java", "javascript": "js", "c": "c"}
+              ext = ext_map.get(lang_name, "txt")
+              
+              file_path = f"solutions/{slug}.{ext}"
+              os.makedirs("solutions", exist_ok=True)
+              
+              with open(file_path, "w", encoding="utf-8") as f:
+                  f.write(code)
+              
+          os.system("git add solutions/")
+          os.system("git commit -m \"Add past LeetCode solutions [skip ci]\" || echo \"No changes to commit\"")
+          os.system(f"git push https://x-access-token:{token}@github.com/{repo_name}.git HEAD:main")
+          '
 
           print("Status Code:", response.status_code)
           data = response.json()
