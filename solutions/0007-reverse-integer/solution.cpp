@@ -1,4 +1,3 @@
-#include <climits>
 class Solution {
 public:
     int reverse(int x) {
@@ -6,7 +5,7 @@ public:
         while (x != 0){
             int rem = x % 10 ;
             if (reverse > INT_MAX / 10 || reverse < INT_MIN / 10) {
-                return 0; 
+                return 0; // Return 0 as required by LeetCode rules
             }
             reverse = reverse * 10 + rem ;
             x = x / 10 ; 
