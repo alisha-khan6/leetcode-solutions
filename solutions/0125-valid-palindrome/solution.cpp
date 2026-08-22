@@ -3,26 +3,27 @@ private:
     bool valid(char c){
         if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')){
             return 1 ;
+        }else{
+            return 0 ;
         }
-        return 0 ;
     }
     char lower(char c){
         if((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')){
-            return c ;
-        }else{
-            char temp = c - 'A' + 'a' ;
-            return temp ;
-        }
+            return c ;}
+            else{
+                char ch = c - 'A' + 'a' ;
+                return ch ;
+            }
     }
-    bool check(string a){
-        int s = 0 ; 
-        int e = a.length() - 1;
-        while(s <= e){
-            if(a[s] != lower(a[e])){
+    bool palindrome(string s){
+        int st = 0 ;
+        int end = s.length() - 1 ;
+        while(st < end){
+            if(s[st] != s[end]){
                 return 0 ;
             }else{
-                s++ ;
-                e-- ;
+                st++ ;
+                end-- ;
             }
         }
         return 1 ;
@@ -32,12 +33,12 @@ public:
         string temp = "" ;
         for(int i = 0 ; i < s.length() ; i++){
             if(valid(s[i])){
-                temp.push_back(s[i]) ;
+                temp.push_back(s[i]);
             }
         }
-        for(int j = 0 ; j < temp.length() ; j++){
-            temp[j] = lower(temp[j]) ;
+        for(int i = 0 ; i < temp.length() ; i++){
+            temp[i] = lower(temp[i]) ;
         }
-        return check(temp) ;
+        return palindrome(temp) ;
     }
 };
