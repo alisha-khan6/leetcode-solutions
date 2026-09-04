@@ -15,7 +15,7 @@ public:
         int high = (m*n) - 1 ;
         bool found = false ;
         while(low <= high){
-            int mid = (low + high) / 2 ;
+            int mid = low + (high - low) / 2 ;
             int i = mid / n ;
             int j = mid % n ;
             if(matrix[i][j] == target){
