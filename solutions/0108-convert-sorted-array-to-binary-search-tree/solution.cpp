@@ -10,17 +10,21 @@
  * };
  */
 class Solution {
-TreeNode* build(vector<int> v , int s , int e) {
-    if(s > e)
+TreeNode* insert(vector<int> nums , int s , int h){
+    if(s > h)
         return NULL ;
-    int mid = s + (e - s) / 2 ;
-    TreeNode* root = new TreeNode(v[mid]) ;
-    root -> left = build(v , s , mid - 1) ;
-    root -> right = build(v , mid + 1 , e) ;
-    return root ;
+    int n = nums.size() ;
+    int mid = s + (h - s) / 2 ;
+    TreeNode* root = new TreeNode(nums[mid]) ;
+    root -> left = insert(nums , s , mid - 1) ;
+    root -> right = insert(nums , mid + 1 , h) ;
+    return root ; 
 }
 public:
     TreeNode* sortedArrayToBST(vector<int>& nums) {
-        return build(nums , 0 , nums.size() - 1) ;
+        int n = nums.size() ;
+        int s = 0 ;
+        int h = n - 1 ;
+        return insert(nums , s , h) ;
     }
 };
